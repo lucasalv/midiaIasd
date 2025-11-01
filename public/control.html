@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Switcher - Controle</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Video Switcher - Painel de Controle</h1>
+            <div class="status-indicators">
+                <div class="status-item">
+                    <span class="status-label">Preview:</span>
+                    <span id="preview-status" class="status-value">Nenhum</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Program:</span>
+                    <span id="program-status" class="status-value">Nenhum</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Seção de Upload -->
+            <section class="upload-section">
+                <h2>📁 Upload de Vídeos</h2>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div class="upload-area">
+                        <input type="file" id="video-input" name="video" accept="video/*" required>
+                        <label for="video-input" class="upload-label">
+                            <span class="upload-icon">📤</span>
+                            <span>Selecionar Vídeo</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="upload-btn">Enviar Vídeo</button>
+                </form>
+                <div id="upload-status" class="upload-status"></div>
+            </section>
+
+            <div class="switcher-layout">
+                <!-- Media Bin -->
+                <section class="media-bin">
+                    <h2>📚 Media Bin</h2>
+                    <div id="media-list" class="media-list">
+                        <div class="empty-state">
+                            <span>Nenhum arquivo carregado</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Preview -->
+                <section class="preview-section">
+                    <h2>👁️ Preview</h2>
+                    <div class="video-container">
+                        <video id="preview-video" muted autoplay controls>
+                            <source src="" type="video/mp4">
+                            Seu navegador não suporta vídeo HTML5.
+                        </video>
+                        <div id="preview-placeholder" class="video-placeholder">
+                            <span>Selecione uma fonte do Media Bin</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Program -->
+                <section class="program-section">
+                    <h2>📺 Program (Ao Vivo)</h2>
+                    <div class="video-container">
+                        <video id="program-video" muted autoplay controls>
+                            <source src="" type="video/mp4">
+                            Seu navegador não suporta vídeo HTML5.
+                        </video>
+                        <div id="program-placeholder" class="video-placeholder">
+                            <span>Nenhum programa ativo</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Controles -->
+            <section class="controls">
+                <button id="go-live-btn" class="go-live-btn" disabled>
+                    <span class="btn-icon">⚡</span>
+                    CUT
+                </button>
+                <div class="control-info">
+                    <p>Selecione uma fonte no Preview e clique em CUT para ir ao vivo</p>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <div class="links">
+                <a href="output.html" target="_blank" class="link-btn">📺 Abrir Output</a>
+                <a href="share.html" target="_blank" class="link-btn">🖥️ Compartilhar Tela</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Switcher - Compartilhamento</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="share-page">
+    <div class="container">
+        <header>
+            <h1>🖥️ Video Switcher - Compartilhamento de Tela</h1>
+            <div class="status-indicators">
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span id="share-status" class="status-value">Pronto</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="share-main">
+            <div class="share-controls">
+                <div class="input-group">
+                    <label for="source-name">Nome da Fonte:</label>
+                    <input type="text" id="source-name" placeholder="Ex: Apresentação Principal" value="Compartilhamento de Tela">
+                </div>
+                
+                <button id="share-btn" class="share-btn">
+                    <span class="btn-icon">🖥️</span>
+                    <span class="btn-text">Compartilhar Tela</span>
+                </button>
+                
+                <button id="stop-share-btn" class="stop-share-btn" style="display: none;">
+                    <span class="btn-icon">⏹️</span>
+                    <span class="btn-text">Parar Compartilhamento</span>
+                </button>
+            </div>
+
+            <div class="preview-container">
+                <h3>Preview do Compartilhamento</h3>
+                <div class="video-container">
+                    <video id="preview" muted autoplay></video>
+                    <div id="preview-placeholder" class="video-placeholder">
+                        <div class="placeholder-content">
+                            <span class="placeholder-icon">🖥️</span>
+                            <p>Clique em "Compartilhar Tela" para iniciar</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="instructions">
+                <h3>📋 Instruções</h3>
+                <ol>
+                    <li>Digite um nome para sua fonte (opcional)</li>
+                <li>Clique em "Compartilhar Tela"</li>
+                <li>Selecione a tela ou janela que deseja compartilhar</li>
+                <li>Marque "Compartilhar áudio" se desejar incluir áudio</li>
+                <li>Clique em "Compartilhar" no navegador</li>
+                <li>Sua tela aparecerá no painel de controle</li>
+            </ol>
+        </div>
+    </main>
+
+    <footer>
+        <div class="links">
+            <a href="control.html" class="link-btn">🎛️ Painel de Controle</a>
+            <a href="output.html" target="_blank" class="link-btn">📺 Ver Output</a>
+        </div>
+    </footer>
+</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>

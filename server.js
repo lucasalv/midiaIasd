@@ -256,7 +256,7 @@ io.on('connection', (socket) => {
 // Inicializar lista de mídia ao iniciar o servidor
 updateMediaListFromFiles();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 7777;
 const HOST = '0.0.0.0'; // Aceita conexões de qualquer IP
 
 server.listen(PORT, HOST, () => {

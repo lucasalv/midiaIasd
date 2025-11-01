@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Switcher - Output</title>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="output-page">
+    <div class="container">
+        <header>
+            <h1>📺 Video Switcher - Output</h1>
+            <div class="status-indicators">
+                <div class="status-item">
+                    <span class="status-label">Status:</span>
+                    <span id="output-status" class="status-value">Aguardando...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Fonte:</span>
+                    <span id="source-info" class="status-value">Nenhuma</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="output-main">
+            <div class="output-container">
+                <video id="program-video" autoplay controls muted>
+                    <source src="" type="video/mp4">
+                    Seu navegador não suporta vídeo HTML5.
+                </video>
+                <div id="output-placeholder" class="output-placeholder">
+                    <div class="placeholder-content">
+                        <span class="placeholder-icon">📺</span>
+                        <h2>Aguardando Transmissão</h2>
+                        <p>O operador ainda não iniciou a transmissão</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <div class="links">
+                <a href="control.html" class="link-btn">🎛️ Painel de Controle</a>
+                <a href="share.html" target="_blank" class="link-btn">🖥️ Compartilhar Tela</a>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
