@@ -190,7 +190,16 @@ if (currentPage === 'control.html') {
                 const btnIcon = media.type === 'video' ? '🎬' : (media.type === 'image' ? '🖼️' : '🖥️');
                 btn.innerHTML = btnIcon;
                 btn.title = media.type === 'video' ? 'Selecionar vídeo para preview' : (media.type === 'image' ? 'Selecionar imagem para preview' : 'Selecionar compartilhamento para preview');
-                btn.addEventListener('click', () => setPreview(media));
+                btn.addEventListener('click', (ev) => {
+                    ev.stopPropagation(); // evitar dupla ativação se item também tiver listener
+                    setPreview(media);
+                });
+            }
+
+            // Tornar o item todo clicável (não apenas o botão). Isso garante
+            // que clicar no nome ou em qualquer área do item selecione o preview.
+            if (itemEl) {
+                itemEl.addEventListener('click', () => setPreview(media));
             }
 
             if (nameEl) {
