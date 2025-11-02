@@ -36,40 +36,91 @@ if (currentPage === 'control.html') {
     const goLiveBtn = document.getElementById('go-live-btn');
     const previewStatus = document.getElementById('preview-status');
     const programStatus = document.getElementById('program-status');
+    const uploadProgressContainer = document.getElementById('upload-progress-container');
+    const uploadProgress = document.getElementById('upload-progress');
+    const uploadProgressPercent = document.getElementById('upload-progress-percent');
+    const uploadBtn = document.querySelector('.upload-btn');
 
     let currentPreviewSource = null;
 
-    // Upload de vídeos
-    uploadForm.addEventListener('submit', async (e) => {
+    // Upload de vídeos com barra de progresso (XMLHttpRequest usado para monitorar progresso)
+    uploadForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        
+
         if (!videoInput.files[0]) {
-            showUploadStatus('Selecione um arquivo de vídeo', 'error');
+            showUploadStatus('Selecione um arquivo (vídeo ou imagem)', 'error');
             return;
         }
 
         const formData = new FormData();
-        formData.append('video', videoInput.files[0]);
+        // Campo 'media' deve bater com upload.single('media') no servidor
+        formData.append('media', videoInput.files[0]);
 
-        try {
-            showUploadStatus('Enviando vídeo...', 'loading');
-            
-            const response = await fetch('/upload', {
-                method: 'POST',
-                body: formData
-            });
-
-            const result = await response.json();
-            
-            if (result.success) {
-                showUploadStatus('Vídeo enviado com sucesso!', 'success');
-                videoInput.value = '';
-            } else {
-                showUploadStatus('Erro ao enviar vídeo: ' + result.error, 'error');
-            }
-        } catch (error) {
-            showUploadStatus('Erro ao enviar vídeo: ' + error.message, 'error');
+    // Preparar UI
+    showUploadStatus('Enviando arquivo...', 'loading');
+        if (uploadProgressContainer) uploadProgressContainer.setAttribute('aria-hidden', 'false');
+        if (uploadProgress) {
+            uploadProgress.value = 0;
+            uploadProgress.setAttribute('aria-valuenow', 0);
         }
+        if (uploadProgressPercent) uploadProgressPercent.textContent = '0%';
+        if (uploadBtn) uploadBtn.disabled = true;
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload');
+
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable && uploadProgress) {
+                const percent = Math.round((event.loaded / event.total) * 100);
+                uploadProgress.value = percent;
+                uploadProgress.setAttribute('aria-valuenow', percent);
+                if (uploadProgressPercent) uploadProgressPercent.textContent = percent + '%';
+            }
+        };
+
+        xhr.onload = () => {
+            if (uploadBtn) uploadBtn.disabled = false;
+            try {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    const result = JSON.parse(xhr.responseText);
+                    if (result && result.success) {
+                        // Mensagem específica dependendo do tipo retornado pelo servidor
+                        if (result.type === 'image') {
+                            showUploadStatus('Imagem enviada com sucesso!', 'success');
+                        } else if (result.type === 'video') {
+                            showUploadStatus('Vídeo enviado com sucesso!', 'success');
+                        } else {
+                            showUploadStatus('Arquivo enviado com sucesso!', 'success');
+                        }
+                        videoInput.value = '';
+                    } else {
+                        showUploadStatus('Erro ao enviar arquivo: ' + (result && (result.error || result.message) ? (result.error || result.message) : 'erro desconhecido'), 'error');
+                    }
+                } else {
+                    showUploadStatus('Erro no upload: ' + xhr.status + ' ' + xhr.statusText, 'error');
+                }
+            } catch (err) {
+                showUploadStatus('Resposta do servidor inválida', 'error');
+            } finally {
+                // Esconder barra após curto delay
+                setTimeout(() => {
+                    if (uploadProgressContainer) uploadProgressContainer.setAttribute('aria-hidden', 'true');
+                    if (uploadProgress) {
+                        uploadProgress.value = 0;
+                        uploadProgress.setAttribute('aria-valuenow', 0);
+                    }
+                    if (uploadProgressPercent) uploadProgressPercent.textContent = '0%';
+                }, 1200);
+            }
+        };
+
+        xhr.onerror = () => {
+            if (uploadBtn) uploadBtn.disabled = false;
+            showUploadStatus('Erro de rede durante upload', 'error');
+            if (uploadProgressContainer) uploadProgressContainer.setAttribute('aria-hidden', 'true');
+        };
+
+        xhr.send(formData);
     });
 
     function showUploadStatus(message, type) {
@@ -90,29 +141,63 @@ if (currentPage === 'control.html') {
     });
 
     function renderMediaList(list) {
-        if (list.length === 0) {
-            mediaList.innerHTML = '<div class="empty-state"><span>Nenhum arquivo carregado</span></div>';
+        // Renderiza lista de mídia usando template para evitar innerHTML e melhorar performance
+        mediaList.innerHTML = '';
+
+        if (!list || list.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.innerHTML = '<span>Nenhum arquivo carregado</span>';
+            mediaList.appendChild(empty);
             return;
         }
 
-        mediaList.innerHTML = list.map(media => `
-            <div class="media-item" data-type="${media.type}" data-source='${JSON.stringify(media)}'>
-                <div class="media-icon">
-                    ${media.type === 'video' ? '🎬' : '🖥️'}
-                </div>
-                <div class="media-info">
-                    <div class="media-name">${media.name}</div>
-                    <div class="media-type">${media.type === 'video' ? 'Vídeo' : 'Compartilhamento'}</div>
-                </div>
-            </div>
-        `).join('');
-
-        // Adicionar event listeners aos itens
-        document.querySelectorAll('.media-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const source = JSON.parse(item.dataset.source);
-                setPreview(source);
+        const template = document.getElementById('media-item-template');
+        if (!template) {
+            // Fallback: criar via DOM simples se template não existir
+            list.forEach(media => {
+                const item = document.createElement('div');
+                item.className = 'media-item';
+                item.dataset.type = media.type;
+                item.dataset.source = JSON.stringify(media);
+                const icon = media.type === 'video' ? '🎬' : (media.type === 'image' ? '🖼️' : '🖥️');
+                const typeLabel = media.type === 'video' ? 'Vídeo' : (media.type === 'image' ? 'Imagem' : 'Compartilhamento');
+                item.innerHTML = `
+                    <div class="media-icon">${icon}</div>
+                    <div class="media-info">
+                        <div class="media-name">${media.name}</div>
+                        <div class="media-type">${typeLabel}</div>
+                    </div>`;
+                item.addEventListener('click', () => setPreview(media));
+                mediaList.appendChild(item);
             });
+            return;
+        }
+
+        // Usar template para criar cada item sem expor o HTML via string
+        list.forEach(media => {
+            const clone = template.content.cloneNode(true);
+            const itemEl = clone.querySelector('.media-item');
+            const btn = clone.querySelector('.media-select-btn');
+            const nameEl = clone.querySelector('.media-name');
+
+            if (itemEl) {
+                itemEl.dataset.type = media.type;
+                itemEl.dataset.source = JSON.stringify(media);
+            }
+
+            if (btn) {
+                const btnIcon = media.type === 'video' ? '🎬' : (media.type === 'image' ? '🖼️' : '🖥️');
+                btn.innerHTML = btnIcon;
+                btn.title = media.type === 'video' ? 'Selecionar vídeo para preview' : (media.type === 'image' ? 'Selecionar imagem para preview' : 'Selecionar compartilhamento para preview');
+                btn.addEventListener('click', () => setPreview(media));
+            }
+
+            if (nameEl) {
+                nameEl.textContent = media.name;
+            }
+
+            mediaList.appendChild(clone);
         });
     }
 
@@ -128,7 +213,17 @@ if (currentPage === 'control.html') {
             previewVideo.src = source.path;
             previewVideo.style.display = 'block';
             previewPlaceholder.style.display = 'none';
+        } else if (source.type === 'image') {
+            // Mostrar imagem no placeholder
+            previewVideo.style.display = 'none';
+            previewPlaceholder.style.display = 'flex';
+            previewPlaceholder.innerHTML = `
+                <div class="placeholder-content">
+                    <img src="${source.path}" alt="${source.name}" style="max-width:100%; max-height:100%; border-radius:8px;" />
+                </div>
+            `;
         } else {
+            // screenshare
             previewVideo.style.display = 'none';
             previewPlaceholder.style.display = 'flex';
             previewPlaceholder.innerHTML = `
@@ -164,7 +259,17 @@ if (currentPage === 'control.html') {
             programVideo.src = source.path;
             programVideo.style.display = 'block';
             programPlaceholder.style.display = 'none';
+        } else if (source.type === 'image') {
+            // Mostrar imagem estática no programa
+            programVideo.style.display = 'none';
+            programPlaceholder.style.display = 'flex';
+            programPlaceholder.innerHTML = `
+                <div class="placeholder-content">
+                    <img src="${source.path}" alt="${source.name}" style="max-width:100%; max-height:100%; border-radius:8px;" />
+                </div>
+            `;
         } else {
+            // screenshare
             programVideo.style.display = 'none';
             programPlaceholder.style.display = 'flex';
             programPlaceholder.innerHTML = `

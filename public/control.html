@@ -13,30 +13,36 @@
             <div class="status-indicators">
                 <div class="status-item">
                     <span class="status-label">Preview:</span>
-                    <span id="preview-status" class="status-value">Nenhum</span>
+                    <span id="preview-status" class="status-value" aria-live="polite" role="status">Nenhum</span>
                 </div>
                 <div class="status-item">
                     <span class="status-label">Program:</span>
-                    <span id="program-status" class="status-value">Nenhum</span>
+                    <span id="program-status" class="status-value" aria-live="polite" role="status">Nenhum</span>
                 </div>
             </div>
         </header>
 
-        <div class="main-content">
+    <main class="main-content">
             <!-- Seção de Upload -->
             <section class="upload-section">
-                <h2>📁 Upload de Vídeos</h2>
+                <h2>📁 Upload de Mídia (vídeo ou imagem)</h2>
                 <form id="upload-form" enctype="multipart/form-data">
                     <div class="upload-area">
-                        <input type="file" id="video-input" name="video" accept="video/*" required>
+                        <input type="file" id="video-input" name="media" accept="video/*,image/*" required aria-label="Selecionar arquivo de vídeo ou imagem">
                         <label for="video-input" class="upload-label">
-                            <span class="upload-icon">📤</span>
-                            <span>Selecionar Vídeo</span>
+                            <span class="upload-icon" aria-hidden="true">📤</span>
+                            <span>Selecionar Arquivo (vídeo ou imagem)</span>
                         </label>
                     </div>
-                    <button type="submit" class="upload-btn">Enviar Vídeo</button>
+                    <button type="submit" class="upload-btn">Enviar</button>
                 </form>
-                <div id="upload-status" class="upload-status"></div>
+                <div id="upload-status" class="upload-status" role="status" aria-live="polite"></div>
+
+                <!-- Barra de progresso do upload -->
+                <div class="upload-progress" id="upload-progress-container" aria-hidden="true">
+                    <progress id="upload-progress" value="0" max="100" class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></progress>
+                    <span id="upload-progress-percent" class="progress-percent">0%</span>
+                </div>
             </section>
 
             <div class="switcher-layout">
@@ -54,7 +60,7 @@
                 <section class="preview-section">
                     <h2>👁️ Preview</h2>
                     <div class="video-container">
-                        <video id="preview-video" muted autoplay controls>
+                        <video id="preview-video" muted autoplay controls aria-label="Preview de vídeo">
                             <source src="" type="video/mp4">
                             Seu navegador não suporta vídeo HTML5.
                         </video>
@@ -68,7 +74,7 @@
                 <section class="program-section">
                     <h2>📺 Program (Ao Vivo)</h2>
                     <div class="video-container">
-                        <video id="program-video" muted autoplay controls>
+                        <video id="program-video" muted autoplay controls aria-label="Programa ao vivo">
                             <source src="" type="video/mp4">
                             Seu navegador não suporta vídeo HTML5.
                         </video>
@@ -81,7 +87,7 @@
 
             <!-- Controles -->
             <section class="controls">
-                <button id="go-live-btn" class="go-live-btn" disabled>
+                <button id="go-live-btn" class="go-live-btn" disabled aria-controls="preview-video program-video">
                     <span class="btn-icon">⚡</span>
                     CUT
                 </button>
@@ -89,7 +95,7 @@
                     <p>Selecione uma fonte no Preview e clique em CUT para ir ao vivo</p>
                 </div>
             </section>
-        </div>
+    </main>
 
         <footer>
             <div class="links">
@@ -98,6 +104,18 @@
             </div>
         </footer>
     </div>
+
+    <noscript>
+        <div class="noscript-warning">Aviso: Este painel requer JavaScript para funcionar corretamente.</div>
+    </noscript>
+
+    <!-- Template para itens do Media Bin (usado pelo client.js) -->
+    <template id="media-item-template">
+        <div class="media-item">
+            <button type="button" class="media-select-btn" aria-label="Selecionar para preview"></button>
+            <span class="media-name"></span>
+        </div>
+    </template>
 
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js"></script>

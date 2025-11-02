@@ -183,6 +183,39 @@ header h1 {
     border: 1px solid rgba(255, 193, 7, 0.3);
 }
 
+/* Upload progress */
+.upload-progress {
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+}
+
+.progress-bar {
+    width: 70%;
+    height: 12px;
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.progress-bar::-webkit-progress-bar {
+    background: rgba(0,0,0,0.08);
+}
+
+.progress-bar::-webkit-progress-value {
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.progress-percent {
+    min-width: 40px;
+    text-align: right;
+    font-weight: 700;
+    color: #333;
+}
+
 /* Switcher Layout */
 .switcher-layout {
     display: grid;
