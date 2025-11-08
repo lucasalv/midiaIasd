@@ -27,14 +27,14 @@
             <section class="upload-section">
                 <h2>📁 Upload de Mídia (vídeo ou imagem)</h2>
                 <form id="upload-form" enctype="multipart/form-data">
-                    <div class="upload-area">
-                        <input type="file" id="video-input" name="media" accept="video/*,image/*" required aria-label="Selecionar arquivo de vídeo ou imagem">
-                        <label for="video-input" class="upload-label">
-                            <span class="upload-icon" aria-hidden="true">📤</span>
-                            <span>Selecionar Arquivo (vídeo ou imagem)</span>
-                        </label>
+                    <div class="input-group" style="margin-bottom: 15px;">
+                        <label for="media-name-input" style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Nome do arquivo (opcional):</label>
+                        <input type="text" id="media-name-input" placeholder="Deixe em branco para usar o nome original" style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; transition: all 0.3s ease;">
                     </div>
-                    <button type="submit" class="upload-btn">Enviar</button>
+                    <div class="upload-area" style="display: none;">
+                        <input type="file" id="video-input" name="media" accept="video/*,image/*" required aria-label="Selecionar arquivo de vídeo ou imagem">
+                    </div>
+                    <button type="button" id="select-file-btn" class="upload-btn">Selecionar Arquivo</button>
                 </form>
                 <div id="upload-status" class="upload-status" role="status" aria-live="polite"></div>
 
@@ -114,6 +114,7 @@
         <div class="media-item">
             <button type="button" class="media-select-btn" aria-label="Selecionar para preview"></button>
             <span class="media-name"></span>
+            <button type="button" class="media-delete-btn" aria-label="Excluir mídia" title="Excluir">🗑️</button>
         </div>
     </template>
 

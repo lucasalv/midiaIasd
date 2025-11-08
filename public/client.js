@@ -27,6 +27,8 @@ const rtcConfig = {
 if (currentPage === 'control.html') {
     const uploadForm = document.getElementById('upload-form');
     const videoInput = document.getElementById('video-input');
+    const mediaNameInput = document.getElementById('media-name-input');
+    const selectFileBtn = document.getElementById('select-file-btn');
     const uploadStatus = document.getElementById('upload-status');
     const mediaList = document.getElementById('media-list');
     const previewVideo = document.getElementById('preview-video');
@@ -39,14 +41,12 @@ if (currentPage === 'control.html') {
     const uploadProgressContainer = document.getElementById('upload-progress-container');
     const uploadProgress = document.getElementById('upload-progress');
     const uploadProgressPercent = document.getElementById('upload-progress-percent');
-    const uploadBtn = document.querySelector('.upload-btn');
 
     let currentPreviewSource = null;
+    let currentProgramSource = null;
 
-    // Upload de vídeos com barra de progresso (XMLHttpRequest usado para monitorar progresso)
-    uploadForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-
+    // Função para fazer upload do arquivo
+    function uploadFile() {
         if (!videoInput.files[0]) {
             showUploadStatus('Selecione um arquivo (vídeo ou imagem)', 'error');
             return;
@@ -55,16 +55,21 @@ if (currentPage === 'control.html') {
         const formData = new FormData();
         // Campo 'media' deve bater com upload.single('media') no servidor
         formData.append('media', videoInput.files[0]);
+        
+        // Adicionar nome personalizado se fornecido
+        if (mediaNameInput && mediaNameInput.value.trim()) {
+            formData.append('customName', mediaNameInput.value.trim());
+        }
 
-    // Preparar UI
-    showUploadStatus('Enviando arquivo...', 'loading');
+        // Preparar UI
+        showUploadStatus('Enviando arquivo...', 'loading');
         if (uploadProgressContainer) uploadProgressContainer.setAttribute('aria-hidden', 'false');
         if (uploadProgress) {
             uploadProgress.value = 0;
             uploadProgress.setAttribute('aria-valuenow', 0);
         }
         if (uploadProgressPercent) uploadProgressPercent.textContent = '0%';
-        if (uploadBtn) uploadBtn.disabled = true;
+        if (selectFileBtn) selectFileBtn.disabled = true;
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/upload');
@@ -79,7 +84,7 @@ if (currentPage === 'control.html') {
         };
 
         xhr.onload = () => {
-            if (uploadBtn) uploadBtn.disabled = false;
+            if (selectFileBtn) selectFileBtn.disabled = false;
             try {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     const result = JSON.parse(xhr.responseText);
@@ -93,6 +98,7 @@ if (currentPage === 'control.html') {
                             showUploadStatus('Arquivo enviado com sucesso!', 'success');
                         }
                         videoInput.value = '';
+                        if (mediaNameInput) mediaNameInput.value = '';
                     } else {
                         showUploadStatus('Erro ao enviar arquivo: ' + (result && (result.error || result.message) ? (result.error || result.message) : 'erro desconhecido'), 'error');
                     }
@@ -115,13 +121,29 @@ if (currentPage === 'control.html') {
         };
 
         xhr.onerror = () => {
-            if (uploadBtn) uploadBtn.disabled = false;
+            if (selectFileBtn) selectFileBtn.disabled = false;
             showUploadStatus('Erro de rede durante upload', 'error');
             if (uploadProgressContainer) uploadProgressContainer.setAttribute('aria-hidden', 'true');
         };
 
         xhr.send(formData);
-    });
+    }
+
+    // Botão para abrir seletor de arquivos
+    if (selectFileBtn) {
+        selectFileBtn.addEventListener('click', () => {
+            videoInput.click();
+        });
+    }
+
+    // Quando um arquivo for selecionado, fazer upload automaticamente
+    if (videoInput) {
+        videoInput.addEventListener('change', () => {
+            if (videoInput.files[0]) {
+                uploadFile();
+            }
+        });
+    }
 
     function showUploadStatus(message, type) {
         uploadStatus.textContent = message;
@@ -167,8 +189,19 @@ if (currentPage === 'control.html') {
                     <div class="media-info">
                         <div class="media-name">${media.name}</div>
                         <div class="media-type">${typeLabel}</div>
-                    </div>`;
+                    </div>
+                    <button type="button" class="media-delete-btn" aria-label="Excluir mídia" title="Excluir">🗑️</button>`;
                 item.addEventListener('click', () => setPreview(media));
+                
+                // Adicionar listener para o botão de exclusão
+                const deleteBtn = item.querySelector('.media-delete-btn');
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        deleteMedia(media);
+                    });
+                }
+                
                 mediaList.appendChild(item);
             });
             return;
@@ -180,6 +213,7 @@ if (currentPage === 'control.html') {
             const itemEl = clone.querySelector('.media-item');
             const btn = clone.querySelector('.media-select-btn');
             const nameEl = clone.querySelector('.media-name');
+            const deleteBtn = clone.querySelector('.media-delete-btn');
 
             if (itemEl) {
                 itemEl.dataset.type = media.type;
@@ -196,6 +230,14 @@ if (currentPage === 'control.html') {
                 });
             }
 
+            // Adicionar listener para o botão de exclusão
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation(); // evitar que o clique no botão selecione o preview
+                    deleteMedia(media);
+                });
+            }
+
             // Tornar o item todo clicável (não apenas o botão). Isso garante
             // que clicar no nome ou em qualquer área do item selecione o preview.
             if (itemEl) {
@@ -207,6 +249,47 @@ if (currentPage === 'control.html') {
             }
 
             mediaList.appendChild(clone);
+        });
+    }
+
+    // Função para excluir mídia
+    function deleteMedia(media) {
+        if (!confirm(`Tem certeza que deseja excluir "${media.name}"?`)) {
+            return;
+        }
+
+        // Não permitir excluir se estiver em uso no preview
+        if (currentPreviewSource && currentPreviewSource.path === media.path) {
+            showUploadStatus('Não é possível excluir: mídia está em uso no preview', 'error');
+            return;
+        }
+
+        // Não permitir excluir se estiver em uso no programa
+        if (currentProgramSource && currentProgramSource.path === media.path) {
+            showUploadStatus('Não é possível excluir: mídia está em uso no programa', 'error');
+            return;
+        }
+
+        // Enviar requisição para excluir
+        fetch('/delete-media', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ path: media.path, type: media.type })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showUploadStatus('Mídia excluída com sucesso!', 'success');
+                // A lista será atualizada automaticamente via Socket.IO
+            } else {
+                showUploadStatus('Erro ao excluir mídia: ' + (result.error || 'erro desconhecido'), 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao excluir mídia:', error);
+            showUploadStatus('Erro ao excluir mídia', 'error');
         });
     }
 
@@ -259,6 +342,7 @@ if (currentPage === 'control.html') {
     // Atualizar programa
     socket.on('update-program', (source) => {
         if (source) {
+            currentProgramSource = source;
             updateProgramDisplay(source);
         }
     });
