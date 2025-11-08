@@ -306,9 +306,102 @@ if (currentPage === 'output.html') {
     const outputStatus = document.getElementById('output-status');
     const sourceInfo = document.getElementById('source-info');
 
+    // --- Fullscreen helpers (mantém visual em tela cheia e evita saída acidental) ---
+    let fsOverlay = null;
+
+    function createFsOverlay() {
+        if (fsOverlay) return;
+        fsOverlay = document.createElement('div');
+        fsOverlay.id = 'fs-overlay';
+        fsOverlay.innerHTML = `
+            <div class="fs-overlay-content">
+                <p>Você saiu da tela cheia. Clique para voltar ou pressione F11.</p>
+                <button id="fs-enter-btn">Voltar para tela cheia</button>
+            </div>`;
+        document.body.appendChild(fsOverlay);
+
+        const btn = document.getElementById('fs-enter-btn');
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            requestFullscreen();
+        });
+
+        fsOverlay.addEventListener('click', () => requestFullscreen());
+        fsOverlay.style.display = 'none';
+    }
+
+    function requestFullscreen() {
+        if (document.fullscreenElement) return;
+        const el = document.documentElement;
+        if (el.requestFullscreen) {
+            el.requestFullscreen().catch(err => {
+                console.warn('Falha ao entrar em tela cheia:', err);
+            });
+        }
+    }
+
+    function bindFullscreenBehavior() {
+        createFsOverlay();
+
+        // Tentar entrar em fullscreen na primeira interação do usuário (requisito de gesto do navegador)
+        const onFirstInteraction = () => {
+            requestFullscreen();
+            window.removeEventListener('click', onFirstInteraction);
+            window.removeEventListener('keydown', onFirstInteraction);
+        };
+        window.addEventListener('click', onFirstInteraction);
+        window.addEventListener('keydown', onFirstInteraction);
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                // mostrar overlay instruindo o usuário a reentrar em tela cheia
+                if (fsOverlay) fsOverlay.style.display = 'flex';
+            } else {
+                if (fsOverlay) fsOverlay.style.display = 'none';
+            }
+        });
+
+        // Adicionar proteção contra saída acidental (antes de recarregar/fechar)
+        window.addEventListener('beforeunload', (e) => {
+            // Mostrar confirmação padrão do navegador. Mensagens customizadas são ignoradas
+            e.preventDefault();
+            e.returnValue = '';
+        });
+
+        // Aplicar classe para forçar o vídeo ocupar toda a viewport visualmente
+        programVideo.classList.add('fullscreen-video');
+    }
+
+    // Ativa comportamento de fullscreen/overlay assim que a página for detectada como output
+    bindFullscreenBehavior();
+    
+    // Mostrar UI inicialmente (quando não há conteúdo)
+    showOutputUI();
+
+    // Função para esconder controles e elementos da UI
+    function hideOutputUI() {
+        const header = document.querySelector('header');
+        const footer = document.querySelector('footer');
+        if (header) header.classList.add('hidden');
+        if (footer) footer.classList.add('hidden');
+        programVideo.controls = false;
+        programVideo.classList.add('no-controls');
+    }
+
+    // Função para mostrar controles e elementos da UI
+    function showOutputUI() {
+        const header = document.querySelector('header');
+        const footer = document.querySelector('footer');
+        if (header) header.classList.remove('hidden');
+        if (footer) footer.classList.remove('hidden');
+    }
+
     // Receber programa
     socket.on('set-program', (source) => {
         console.log('Programa recebido:', source);
+        
+        // Esconder UI quando há conteúdo
+        hideOutputUI();
         
         if (source.type === 'video') {
             // Parar qualquer stream WebRTC anterior
@@ -324,6 +417,27 @@ if (currentPage === 'output.html') {
             
             programVideo.style.display = 'block';
             outputPlaceholder.style.display = 'none';
+            
+            outputStatus.textContent = 'Transmitindo';
+            sourceInfo.textContent = source.name;
+            
+        } else if (source.type === 'image') {
+            // Parar qualquer stream WebRTC anterior
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            
+            // Limpar vídeo e mostrar imagem no placeholder
+            programVideo.srcObject = null;
+            programVideo.src = '';
+            programVideo.style.display = 'none';
+            outputPlaceholder.style.display = 'flex';
+            outputPlaceholder.innerHTML = `
+                <div class="placeholder-content">
+                    <img src="${source.path}" alt="${source.name}" />
+                </div>
+            `;
             
             outputStatus.textContent = 'Transmitindo';
             sourceInfo.textContent = source.name;
