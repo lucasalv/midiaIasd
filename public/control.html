@@ -8,20 +8,6 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🎬 Video Switcher - Painel de Controle</h1>
-            <div class="status-indicators">
-                <div class="status-item">
-                    <span class="status-label">Preview:</span>
-                    <span id="preview-status" class="status-value" aria-live="polite" role="status">Nenhum</span>
-                </div>
-                <div class="status-item">
-                    <span class="status-label">Program:</span>
-                    <span id="program-status" class="status-value" aria-live="polite" role="status">Nenhum</span>
-                </div>
-            </div>
-        </header>
-
     <main class="main-content">
             <!-- Seção de Upload -->
             <section class="upload-section">
@@ -114,6 +100,7 @@
         <div class="media-item">
             <button type="button" class="media-select-btn" aria-label="Selecionar para preview"></button>
             <span class="media-name"></span>
+            <button type="button" class="media-send-btn" aria-label="Enviar para preview" title="Enviar para preview">📤</button>
             <button type="button" class="media-delete-btn" aria-label="Excluir mídia" title="Excluir">🗑️</button>
         </div>
     </template>

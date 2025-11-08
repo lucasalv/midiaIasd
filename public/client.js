@@ -190,8 +190,18 @@ if (currentPage === 'control.html') {
                         <div class="media-name">${media.name}</div>
                         <div class="media-type">${typeLabel}</div>
                     </div>
+                    <button type="button" class="media-send-btn" aria-label="Enviar para preview" title="Enviar para preview">📤</button>
                     <button type="button" class="media-delete-btn" aria-label="Excluir mídia" title="Excluir">🗑️</button>`;
                 item.addEventListener('click', () => setPreview(media));
+                
+                // Adicionar listener para o botão de enviar
+                const sendBtn = item.querySelector('.media-send-btn');
+                if (sendBtn) {
+                    sendBtn.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        setPreview(media);
+                    });
+                }
                 
                 // Adicionar listener para o botão de exclusão
                 const deleteBtn = item.querySelector('.media-delete-btn');
@@ -213,6 +223,7 @@ if (currentPage === 'control.html') {
             const itemEl = clone.querySelector('.media-item');
             const btn = clone.querySelector('.media-select-btn');
             const nameEl = clone.querySelector('.media-name');
+            const sendBtn = clone.querySelector('.media-send-btn');
             const deleteBtn = clone.querySelector('.media-delete-btn');
 
             if (itemEl) {
@@ -226,6 +237,14 @@ if (currentPage === 'control.html') {
                 btn.title = media.type === 'video' ? 'Selecionar vídeo para preview' : (media.type === 'image' ? 'Selecionar imagem para preview' : 'Selecionar compartilhamento para preview');
                 btn.addEventListener('click', (ev) => {
                     ev.stopPropagation(); // evitar dupla ativação se item também tiver listener
+                    setPreview(media);
+                });
+            }
+
+            // Adicionar listener para o botão de enviar
+            if (sendBtn) {
+                sendBtn.addEventListener('click', (ev) => {
+                    ev.stopPropagation(); // evitar que o clique no botão selecione o preview
                     setPreview(media);
                 });
             }
@@ -328,7 +347,9 @@ if (currentPage === 'control.html') {
     }
 
     function updateStatus() {
-        previewStatus.textContent = currentPreviewSource ? currentPreviewSource.name : 'Nenhum';
+        if (previewStatus) {
+            previewStatus.textContent = currentPreviewSource ? currentPreviewSource.name : 'Nenhum';
+        }
         goLiveBtn.disabled = !currentPreviewSource;
     }
 
@@ -372,7 +393,9 @@ if (currentPage === 'control.html') {
                 </div>
             `;
         }
-        programStatus.textContent = source.name;
+        if (programStatus) {
+            programStatus.textContent = source.name;
+        }
     }
 
     // Botão CUT
